@@ -87,23 +87,35 @@ function loadMedia(session, mediaUrl, startTime) {
     </i>`;
 
   castButton.addEventListener('click', () => {
-    const video = document.querySelector('video');
-    if (!video) {
-      alert('未找到视频元素');
-      return;
-    }
+  const video = document.querySelector('video');
+  if (!video) {
+    alert('未找到视频元素');
+    return;
+  }
 
-    const ua = navigator.userAgent;
-    const isIOS = /iPad|iPhone|iPod/.test(ua);
+  const ua = navigator.userAgent;
+  const isIOS = /iPad|iPhone|iPod/.test(ua);
 
-    if (isIOS && 'webkitShowPlaybackTargetPicker' in video) {
-      video.webkitShowPlaybackTargetPicker();
-    } else if (castApiReady) {
-      launchCast(video.currentSrc, video.currentTime);
+  if (isIOS) {
+    // 确保 video 有正确的属性以支持 AirPlay
+    video.setAttribute('airplay', 'allow');
+    video.setAttribute('x-webkit-airplay', 'allow');
+    video.setAttribute('playsinline', '');
+    video.setAttribute('webkit-playsinline', '');
+
+    if ('webkitShowPlaybackTargetPicker' in video) {
+      video.webkitShowPlaybackTargetPicker(); // 触发 AirPlay 选择器
     } else {
-      alert('请确保使用Chrome浏览器且加载了Cast SDK');
+      alert('该浏览器不支持 AirPlay');
     }
-  });
+  } else if (castApiReady) {
+    // 非 iOS 使用 Chromecast
+    launchCast(video.currentSrc, video.currentTime);
+  } else {
+    alert('未检测到可用的投屏设备或浏览器不支持');
+  }
+});
+
 
   controlsRight.insertBefore(castButton, controlsRight.firstChild);
   console.log('✅ 投屏按钮已成功插入到控制栏中');
